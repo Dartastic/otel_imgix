@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_imgix_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_imgix';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class ImgixResult {
+  /// Creates a result.
   const ImgixResult({
     this.sourceId,
     this.paramCount,
@@ -57,8 +58,13 @@ class ImgixResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class ImgixCallResult<T> {
+  /// Creates a call result.
   const ImgixCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final ImgixResult? result;
 }
@@ -86,65 +92,65 @@ Future<T> tracedImgix<T>({
   final span = _tracer().startSpan(
     'imgix $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.sourceId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'imgix.source.id',
           r.result!.sourceId!,
         ));
       }
       if (r.result!.paramCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'imgix.param_count',
           r.result!.paramCount!,
         ));
       }
       if (r.result!.signed != null) {
-        extras.add(OTel.attributeBool('imgix.signed', r.result!.signed!));
+        extras.add(OTelAPI.attributeBool('imgix.signed', r.result!.signed!));
       }
       if (r.result!.purgeKind != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'imgix.purge.kind',
           r.result!.purgeKind!,
         ));
       }
       if (r.result!.originKind != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'imgix.origin.kind',
           r.result!.originKind!,
         ));
       }
       if (r.result!.outputFormat != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'imgix.output_format',
           r.result!.outputFormat!,
         ));
       }
       if (r.result!.cacheHit != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'imgix.cache.hit',
           r.result!.cacheHit!,
         ));
       }
       if (r.result!.aiAssetUsed != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'imgix.ai_asset',
           r.result!.aiAssetUsed!,
         ));
       }
       if (r.result!.requestId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'imgix.request.id',
           r.result!.requestId!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -155,13 +161,13 @@ Future<T> tracedImgix<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
